@@ -30,19 +30,37 @@ class GithubProfile:
                 new_client._Github__requester,
                 '_logger',
             )
+            retry_handler = getattr(
+                new_client._Github__requester,
+                '__retry',
+            )
+            setattr(
+                retry_handler,
+                '__logger',
+                new_instance.logger,
+            )
+            cls._patch_logger(new_instance.logger)
             new_instance.__client = new_client  # pylint: disable=unused-private-member
             new_instance.check_token_permissions()
             cls.__instance = new_instance
         return cls.__instance
 
-    def get_repo(self, repo_name: str) -> github.Repository.Repository:
-        return self.__client.get_repo(f'{self.__client.get_user().login}/{repo_name}')
+    @staticmethod
+    def _patch_logger(logger: logging.Logger) -> None:
+        parent_logger: logging.Logger = logger.parent  # type: ignore
+        parent_logger.setLevel(logging.INFO)
+        parent_logger.handlers.clear()
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.INFO)
+        handler.setFormatter(
+            logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        )
+        parent_logger.addHandler(handler)
 
     def check_token_permissions(self) -> None:
-        user_readme_repo: github.Repository.Repository = self.get_repo(
-            self.__client.get_user().login
+        user_readme_repo: github.Repository.Repository = self.__client.get_repo(
+            f'{self.__client.get_user().login}/{self.__client.get_user().login}'
         )
-        self.logger.info(f"Successfully connected to {user_readme_repo.full_name}")
 
         random_commit_message = ''.join([
             random.choice(
@@ -50,6 +68,8 @@ class GithubProfile:
             )
             for _ in range(10)
         ])
+
+        self.logger.setLevel(logging.CRITICAL)
         try:
             user_readme_repo.get_contents('README.md')
         except github.GithubException as failed_read_operation:
@@ -79,8 +99,15 @@ class GithubProfile:
                 }
             )
         except github.GithubException:
+            self.logger.setLevel(logging.INFO)
             self.logger.info("Token has only read permissions. Proceeding.")
             return
+
+    @property
+    def repositories(self) -> list[github.Repository.Repository]:
+        return list(
+            self.__client.get_user().get_repos()
+        )
 
     def __post_init__(self) -> None:
         self.logger.info(f", default_factory=logging.getLoggerConnected to Github as {self.username}")
