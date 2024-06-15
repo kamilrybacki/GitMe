@@ -1,5 +1,4 @@
 import os
-import logging
 
 import ghprofile
 import llm.setup
@@ -12,8 +11,7 @@ def start() -> None:
     if not username or not token:
         raise ValueError("Please provide GITHUB_USERNAME and GITHUB_TOKEN environment variables")
     profile = ghprofile.GithubProfile.connect(username, token)
-    logging.root = profile.logger  # type: ignore
-    logging.root.info("Successfully connected to Github!")
+    profile.log("Successfully connected to Github!")
 
     llm_client = llm.setup.get_provider({
         "name": "G1P",
@@ -26,11 +24,12 @@ def start() -> None:
         }
     })
     for repo in profile.repositories:
-        logging.info(f"Processing repository {repo.name}")
-        prompt = llm.prompts.generate_prompt(
-            repo.readme
-        )
-        logging.info(f"Generated prompt for {repo.name}: {prompt}")
+        profile.log(f"Processing repository {repo.name}")
+        # prompt = llm.prompts.generate_prompt(
+        #     repo.readme
+        # )
+        # profile.log(f"Generated prompt for {repo.name}: {prompt}")
+
 
 if __name__ == "__main__":
     start()

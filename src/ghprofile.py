@@ -3,6 +3,7 @@ import dataclasses
 import logging
 import string
 import random
+import typing
 
 import github
 import github.Auth
@@ -114,12 +115,12 @@ class GithubProfile:
         return list(self.__client.get_user().get_repos())
 
     @property
-    def repositories(self) -> list[metadata.RepositoryMetadata]:
+    def repositories(self) -> typing.Generator[metadata.RepositoryMetadata, None, None]:
         self.log(f"Fetching repositories for {self.username}")
-        return [
-            metadata.RepositoryMetadata(repo)
-            for repo in self._repositories
-        ]
+        for repo in self._repositories:
+            if repo.private:
+                continue
+            yield metadata.RepositoryMetadata.from_repo(repo)
 
     def get_repo_readme(self, repo: github.Repository.Repository) -> str:
         try:
