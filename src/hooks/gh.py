@@ -9,6 +9,8 @@ import github.Auth
 import github.ContentFile
 import github.Repository
 
+import metadata
+
 
 @dataclasses.dataclass
 class GithubProfile:
@@ -27,12 +29,12 @@ class GithubProfile:
             authentication_data = github.Auth.Token(token)
             new_client = github.Github(auth=authentication_data)
             new_instance.logger = getattr(
-                new_client._Github__requester,
+                new_client._Github__requester,  # type: ignore
                 '_logger',
             )
             retry_handler = getattr(
-                new_client._Github__requester,
-                '__retry',
+                new_client._Github__requester,  # type: ignore
+                '_Requester__retry',
             )
             setattr(
                 retry_handler,
@@ -53,7 +55,7 @@ class GithubProfile:
         handler = logging.StreamHandler()
         handler.setLevel(logging.INFO)
         handler.setFormatter(
-            logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         )
         parent_logger.addHandler(handler)
 
@@ -69,9 +71,10 @@ class GithubProfile:
             for _ in range(10)
         ])
 
+        # Temporarily disable logging to prevent token leakage
         self.logger.setLevel(logging.CRITICAL)
         try:
-            user_readme_repo.get_contents('README.md')
+            user_readme_repo.get_readme()
         except github.GithubException as failed_read_operation:
             raise github.BadCredentialsException(
                 status=403,
@@ -80,16 +83,16 @@ class GithubProfile:
                 }
             ) from failed_read_operation
         try:
-            created_file = user_readme_repo.create_file(
+            created_file: github.ContentFile.ContentFile = user_readme_repo.create_file(
                 path=f'{random_commit_message}',
                 message=random_commit_message,
                 content=random_commit_message,
                 branch='main'
-            )
+            ).get('content')  # type: ignore
             user_readme_repo.delete_file(
-                path=created_file.path(),
+                path=created_file.path,
                 message=random_commit_message,
-                sha=created_file.sha(),
+                sha=created_file.sha,
                 branch='main'
             )
             raise github.BadCredentialsException(
@@ -98,16 +101,40 @@ class GithubProfile:
                     'message': 'Token has unnecessary read and write permissions! Aborting to prevent misuse',
                 }
             )
-        except github.GithubException:
+        except github.GithubException:  # We want this to happen, because it means the token has only read permissions
             self.logger.setLevel(logging.INFO)
-            self.logger.info("Token has only read permissions. Proceeding.")
+            self.log("Token has only read permissions. Proceeding.")
             return
 
+    def log(self, message: str, level: int = logging.INFO) -> None:
+        self.logger.log(level, message)
+
     @property
-    def repositories(self) -> list[github.Repository.Repository]:
-        return list(
-            self.__client.get_user().get_repos()
-        )
+    def _repositories(self) -> list[github.Repository.Repository]:
+        return list(self.__client.get_user().get_repos())
+
+    @property
+    def repositories(self) -> list[metadata.RepositoryMetadata]:
+        return [
+            metadata.RepositoryMetadata(repo)
+            for repo in self._repositories
+        ]
+
+    def get_repo_readme(self, repo: github.Repository.Repository) -> str:
+        try:
+            return repo.get_readme().decoded_content.decode('utf-8')
+        except github.UnknownObjectException:
+            return ''
+        except github.GithubException as other_error:
+            raise github.UnknownObjectException(
+                status=404,
+                data={
+                    'message': 'Repo does not exist or is private',
+                }
+            ) from other_error
+
+    def __repr__(self) -> str:
+        return f'<GithubProfile username={self.username}>'
 
     def __post_init__(self) -> None:
         self.logger.info(f", default_factory=logging.getLoggerConnected to Github as {self.username}")
