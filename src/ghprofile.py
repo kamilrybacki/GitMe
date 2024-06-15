@@ -115,6 +115,7 @@ class GithubProfile:
 
     @property
     def repositories(self) -> list[metadata.RepositoryMetadata]:
+        self.log(f"Fetching repositories for {self.username}")
         return [
             metadata.RepositoryMetadata(repo)
             for repo in self._repositories

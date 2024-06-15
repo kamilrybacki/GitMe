@@ -4,8 +4,7 @@ import dataclasses
 
 import tenacity
 
-import hooks.llm.config
-import hooks.llm.gemini
+import llm.config
 
 
 @dataclasses.dataclass
@@ -15,9 +14,9 @@ class LLMProvider(abc.ABC):
 
     # pylint: disable=protected-access
     @classmethod
-    def initialize(cls, configuration: hooks.llm.config.LLMConfigDictionary) -> LLMProvider:
+    def initialize(cls, configuration: llm.config.LLMConfigDictionary) -> LLMProvider:
         if not cls.__instance:
-            parsed_config = hooks.llm.config.LLMProviderConfig(
+            parsed_config = llm.config.LLMProviderConfig(
                 connection=configuration["connection"],
                 retry=configuration["retry"],
             )

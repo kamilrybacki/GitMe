@@ -4,7 +4,7 @@ import dataclasses
 
 import google.generativeai.client
 
-from hooks.llm.base import LLMProvider
+from llm.base import LLMProvider
 
 
 @dataclasses.dataclass
