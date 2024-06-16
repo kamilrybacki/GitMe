@@ -41,12 +41,20 @@ class GithubGraphQLAdapter:
             )
         return cls.__instance
 
-    def query(self, query: str) -> dict:
-        response = self._post(
-            self.GITHUB_GRAPHQL_ENDPOINT,
-            data=f"{{'query': {query}}}"
-        )
-        response.raise_for_status()
+    def query(self, query: dict[str, typing.Any]) -> dict:
+        try:
+            response = self._post(
+                self.GITHUB_GRAPHQL_ENDPOINT,
+                json=query
+            )
+        except requests.exceptions.HTTPError as failed_query_error:
+            print(failed_query_error.response.content)
+            raise github.GithubException(
+                status=400,
+                data={
+                    'message': 'Failed to query pinned repositories'
+                }
+            ) from failed_query_error
         return response.json()
 
 
@@ -57,7 +65,7 @@ class GithubProfile:
     logger: logging.Logger = dataclasses.field(init=False, default_factory=logging.getLogger)
 
     __client: github.Github = dataclasses.field(init=False, default_factory=github.Github)
-    __graphql: GithubGraphQLAdapter | None = dataclasses.field(init=False, default=None)
+    __graphql: GithubGraphQLAdapter = dataclasses.field(init=False)
     __instance: GithubProfile | None = dataclasses.field(default=None, init=False)
 
     # pylint: disable=protected-access, unused-private-member
@@ -146,8 +154,14 @@ class GithubProfile:
             self.log("Token has only read permissions. Proceeding.")
             return
 
-    def log(self, message: str, level: int = logging.INFO) -> None:
-        self.logger.log(level, message)
+    def log(self, message_data: typing.Any, level: int = logging.INFO) -> None:
+        self.logger.log(
+            level=level,
+            msg=str(message_data)
+        )
+
+    def get_repo(self, repo_name: str) -> github.Repository.Repository:
+        return self.__client.get_repo(f"{self.username}/{repo_name}")
 
     @property
     def _repositories(self) -> list[github.Repository.Repository]:
@@ -162,26 +176,37 @@ class GithubProfile:
             yield metadata.RepositoryMetadata.from_repo(repo)
 
     @property
-    def pinned_repositories(self) -> typing.Generator[metadata.RepositoryMetadata, None, None]:
-        graphql_query = f"""
-        {{
-            user(login: "{self.username}") {{
-                pinnedItems(first: 6) {{
-                    nodes {{
-                        ... on Repository {{
-                            name
-                            description
-                            url
-                            primaryLanguage {{
+    def _pinned_repositories(self) -> list[github.Repository.Repository]:
+        graphql_query_json = {
+            "query": f"""{{
+                user(login: "{self.username}") {{
+                    pinnedItems(first: 10, types: REPOSITORY) {{
+                        nodes {{
+                            ... on Repository {{
                                 name
                             }}
                         }}
                     }}
                 }}
-            }}
-        }}
-        """
-        return ()
+            }}"""
+        }
+        pinned_repositories_names = [
+            node['name']
+            for node in self.__graphql.query(graphql_query_json)['data']['user']['pinnedItems']['nodes']
+        ]
+        return [
+            repository
+            for repository in self._repositories
+            if repository.name in pinned_repositories_names
+        ]
+
+    @property
+    def pinned_repositories(self) -> typing.Generator[metadata.RepositoryMetadata, None, None]:
+        self.log(f"Fetching pinned repositories for {self.username}")
+        for repo in self._pinned_repositories:
+            if repo.private:
+                continue
+            yield metadata.RepositoryMetadata.from_repo(repo)
 
     def get_repo_readme(self, repo: github.Repository.Repository) -> str:
         try:
