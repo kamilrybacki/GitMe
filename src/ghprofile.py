@@ -5,12 +5,49 @@ import string
 import random
 import typing
 
+import requests
+
 import github
 import github.Auth
 import github.ContentFile
 import github.Repository
 
 import metadata
+
+
+class RequestsSessionHook(typing.Protocol):
+    def __call__(self, *args, **kwargs) -> requests.Response:
+        ...
+
+
+@dataclasses.dataclass(frozen=True)
+class GithubGraphQLAdapter:
+    _post: RequestsSessionHook
+
+    __instance: GithubGraphQLAdapter | None = dataclasses.field(default=None, init=False)
+
+    GITHUB_GRAPHQL_ENDPOINT = 'https://api.github.com/graphql'
+
+    @classmethod
+    def init(cls, token: str) -> GithubGraphQLAdapter:
+        if not cls.__instance:
+            new_graphql_session = requests.Session()
+            new_graphql_session.headers.update({
+                'Authorization': f'bearer {token}',
+                'Content-Type': 'application/json',
+            })
+            cls.__instance = cls(
+                _post=new_graphql_session.post,
+            )
+        return cls.__instance
+
+    def query(self, query: str) -> dict:
+        response = self._post(
+            self.GITHUB_GRAPHQL_ENDPOINT,
+            data=f"{{'query': {query}}}"
+        )
+        response.raise_for_status()
+        return response.json()
 
 
 @dataclasses.dataclass
@@ -20,9 +57,10 @@ class GithubProfile:
     logger: logging.Logger = dataclasses.field(init=False, default_factory=logging.getLogger)
 
     __client: github.Github = dataclasses.field(init=False, default_factory=github.Github)
+    __graphql: GithubGraphQLAdapter | None = dataclasses.field(init=False, default=None)
     __instance: GithubProfile | None = dataclasses.field(default=None, init=False)
 
-    # pylint: disable=protected-access
+    # pylint: disable=protected-access, unused-private-member
     @classmethod
     def connect(cls, username: str, token: str) -> GithubProfile:
         if not cls.__instance:
@@ -43,8 +81,9 @@ class GithubProfile:
                 new_instance.logger,
             )
             cls._patch_logger(new_instance.logger)
-            new_instance.__client = new_client  # pylint: disable=unused-private-member
+            new_instance.__client = new_client
             new_instance.check_token_permissions()
+            new_instance.__graphql = GithubGraphQLAdapter.init(token)
             cls.__instance = new_instance
         return cls.__instance
 
@@ -121,6 +160,28 @@ class GithubProfile:
             if repo.private:
                 continue
             yield metadata.RepositoryMetadata.from_repo(repo)
+
+    @property
+    def pinned_repositories(self) -> typing.Generator[metadata.RepositoryMetadata, None, None]:
+        graphql_query = f"""
+        {{
+            user(login: "{self.username}") {{
+                pinnedItems(first: 6) {{
+                    nodes {{
+                        ... on Repository {{
+                            name
+                            description
+                            url
+                            primaryLanguage {{
+                                name
+                            }}
+                        }}
+                    }}
+                }}
+            }}
+        }}
+        """
+        return ()
 
     def get_repo_readme(self, repo: github.Repository.Repository) -> str:
         try:
