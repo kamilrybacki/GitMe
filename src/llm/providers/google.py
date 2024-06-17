@@ -88,7 +88,7 @@ class GoogleAI(LLMProvider, abc.ABC):
         self._usage_counters['RPM'] += 2
 
     def count_tokens(self, query: str) -> int:
-        return self._model.count_tokens(query).total_tokens
+        return self._model.countaddens(query).total_tokens
 
 
 @dataclasses.dataclass

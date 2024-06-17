@@ -40,6 +40,8 @@ class LLMProvider(abc.ABC):
                 field.removeprefix('_'): getattr(parsed_config._retry, field)
                 for field in parsed_config._retry.get_policy_config()
                 if field.startswith("_")
+            } | {
+                "reraise": True
             })
             setattr(cls, "connect", cls.__retry_policy.wraps(cls.connect))
             cls.__instance = cls.connect(
