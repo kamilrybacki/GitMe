@@ -116,6 +116,10 @@ Below is a brief overview of the configuration options:
 
 #### Optional Parts
 
+If neither `github.only` nor `github.add` is provided, **pinned repositories** 📌 will be analyzed.
+
+If both `github.only` and `github.add` are provided, only the `github.only` repositories will be analyzed.
+
 - **`github.only` (string, nullable)**: Comma-separated list of exclusive repositories to analyze.
   - **Example**:
 
