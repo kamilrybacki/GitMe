@@ -1,0 +1,66 @@
+{
+  "type": "object",
+  "required": ["llm", "github", "output"],
+  "properties": {
+    "llm": {
+      "type": "object",
+      "required": ["name", "connection", "retry"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the LLM provider"
+        },
+        "connection": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Connection configuration specific for the LLM provider"
+        },
+        "retry": {
+          "type": "object",
+          "required": ["delay", "attempts"],
+          "properties": {
+            "delay": {
+              "type": "integer",
+              "description": "Delay between attempts in seconds"
+            },
+            "attempts": {
+              "type": "integer",
+              "description": "Number of attempts before failing"
+            }
+          },
+          "description": "Retry configuration for the LLM provider"
+        }
+      }
+    },
+    "github": {
+      "type": "object",
+      "required": ["username", "token"],
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "GitHub username"
+        },
+        "token": {
+          "type": "string",
+          "description": "GitHub read-only token"
+        },
+        "only": {
+          "type": "string",
+          "nullable": true,
+          "description": "Comma-separated list of exclusive repositories to analyze"
+        },
+        "add": {
+          "type": "string",
+          "nullable": true,
+          "description": "Comma-separated list of additional repositories to analyze"
+        }
+      }
+    },
+    "output": {
+      "type": "string",
+      "description": "Output file name for storing results"
+    }
+  }
+}

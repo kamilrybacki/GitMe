@@ -1,6 +1,4 @@
-
 import dataclasses
-import logging
 import typing
 
 import pandas
@@ -29,6 +27,7 @@ class GitMeRunner:
         self.__parsed_configuration = gitme.config.RunnerConfig(self.config)
         self.config = {}
 
+    # pylint: disable=protected-access
     def run(self) -> pandas.DataFrame:
         self.github_hooks = gitme.gh.GithubProfile.connect(
             username=self.__parsed_configuration._github.username,
@@ -53,6 +52,7 @@ class GitMeRunner:
             index=False
         )
 
+    # pylint: disable=protected-access
     def get_repositories_to_analyze(self) -> list[gitme.gh.RepositoryMetadata]:
         """
         This function fetches the repositories to analyze from the GitHub profile.
@@ -92,7 +92,7 @@ class GitMeRunner:
         This is where the magic happens. We generate prompts for each repository and query the LLM model.
 
         The LLM model will generate a summary based on the prompt and return it to us.
-        
+
         We then log the query and the result to the console.
         """
         summarized_data = []
