@@ -16,4 +16,4 @@ class LocalK8sLLMProvider(gitme.llm.base.LLMProvider, abc.ABC):
     """
     _cluster_info: dict[str, str] = dataclasses.field(init=False)
 
-# TODO: Implement the concrete class for the Kubernetes provider of choice
+# Implement the concrete class for the Kubernetes provider of choice
