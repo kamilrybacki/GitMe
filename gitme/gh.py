@@ -15,7 +15,7 @@ import github.Repository
 from gitme.metadata import RepositoryMetadata
 
 
-class RequestsSessionHook(typing.Protocol):
+class RequestsSessionHook(typing.Protocol):  # pylint: disable=too-few-public-methods
     def __call__(self, *args, **kwargs) -> requests.Response:
         ...
 
