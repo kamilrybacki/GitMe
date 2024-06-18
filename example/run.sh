@@ -3,6 +3,7 @@
 export GITME__GITHUB_USERNAME="your_username"
 export GITME__GITHUB_TOKEN="your_token"
 export GITME__LLM_PROVIDER_API_KEY="your_api_key"
+export GITME__OUTPUT_FILE="output.csv"
 
 # These are optional and either limit the analysis to a subset of repos or add extra repos to the pinned ones. ONLY_THOSE_REPOS takes precedence.
 

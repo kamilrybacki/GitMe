@@ -28,7 +28,7 @@ if __name__ == '__main__':
             "only": os.getenv("GITME__ONLY_THOSE_REPOS"),
             "add": os.getenv("GITME__EXTRA_REPOS")
         },
-        "output": "/tmp/output.csv"
+        "output": os.getenv("GITME__OUTPUT_FILE")
     })
     analyzed_data = runner.run()
     runner.dump(analyzed_data)
