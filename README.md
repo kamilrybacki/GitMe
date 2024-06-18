@@ -59,12 +59,12 @@ bash example/run.sh
 
 ## Configuration
 
-The configuration of the `GitMeRunner` class is done through the `dictionary which
+The configuration of the `GitMeRunner` class is done through the dictionary which
 schema is defined in the [`config.py`](./gitme/config.py) file and can be passed as a parameter to the class constructor.
 
 ### Schema details
 
-For full details on the configuration schema, please refer to the [`config.json`](./config.schema.json) file.
+For full details on the configuration schema, please refer to the [`config.schema.json`](./config.schema.json) file.
 
 Below is a brief overview of the configuration options:
 
