@@ -6,7 +6,7 @@ import typing
 
 import tenacity
 
-import gitme.llm.config
+import gitme.config
 
 
 class TokenCounters(typing.TypedDict):
@@ -30,23 +30,20 @@ class LLMProvider(abc.ABC):
 
     # pylint: disable=protected-access
     @classmethod
-    def initialize(cls, configuration: gitme.llm.config.LLMConfigDictionary) -> LLMProvider:
+    def initialize(cls, configuration: gitme.config.LLMProviderConfig) -> LLMProvider:
         if not cls.__instance:
-            parsed_config = gitme.llm.config.LLMProviderConfig(
-                connection=configuration["connection"],
-                retry=configuration["retry"],
-            )
             cls.__retry_policy = tenacity.Retrying(**{
-                field.removeprefix('_'): getattr(parsed_config._retry, field)
-                for field in parsed_config._retry.get_policy_config()
+                field.removeprefix('_'): getattr(configuration._retry, field)
+                for field in configuration._retry.get_policy_config()
                 if field.startswith("_")
             } | {
                 "reraise": True
             })
             setattr(cls, "connect", cls.__retry_policy.wraps(cls.connect))
             cls.__instance = cls.connect(
-                parsed_config.connection
+                configuration.connection
             )
+            configuration = {}
         return cls.__instance
 
     def set_logger(self, logger: logging.Logger) -> None:

@@ -97,7 +97,7 @@ def test_token_limiter(
     "name",
     [
         model
-        for model in gitme.llm.setup.AVAILABLE_PROVIDERS.keys()
+        for model in gitme.llm.setup.__AVAILABLE_PROVIDERS.keys()
         if model.startswith("G")
     ]
 )
@@ -113,7 +113,7 @@ def test_google_model(name: str, monkeypatch) -> None:
         },
         "retry": {
             "delay": 1,
-            "retries": 3
+            "attempts": 3
         }
     }
     monkeypatch.setattr(

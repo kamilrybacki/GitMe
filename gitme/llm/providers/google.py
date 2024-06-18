@@ -55,6 +55,7 @@ class GoogleAI(LLMProvider, abc.ABC):
 
     def query(self, query: str) -> LLMQueryResult:
         tokens_to_send = self.count_tokens(query)
+        self.log(f"Sending {tokens_to_send} tokens to the model.")
         if self._are_limits_exceeded(tokens_to_send):
             self.log("Usage limits exceeded. Waiting for the next minute to continue.", level=logging.WARNING)
             time.sleep(60)
@@ -68,6 +69,7 @@ class GoogleAI(LLMProvider, abc.ABC):
             )
         )
         self._update_usage_counters(result.tokens)
+        self.log(f"Provider generated {result.tokens['total'] - tokens_to_send} tokens in response.")
         return result
 
     def _are_limits_exceeded(self, requested_tokens: int) -> bool:
