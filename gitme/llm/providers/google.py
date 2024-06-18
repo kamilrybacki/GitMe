@@ -24,6 +24,10 @@ MAX_RPM_PER_MODEL: dict[str, int] = {
 
 @dataclasses.dataclass
 class GoogleAI(LLMProvider, abc.ABC):
+    """
+        Base class for Google AI models that utilizes the generativeai library.
+        Internal counters ensure that the per minute usage limits are not exceeded.
+    """
     _model: google.generativeai.GenerativeModel
     _limits: dict[str, int] = dataclasses.field(default_factory=dict)
     _usage_counters: dict[str, int] = dataclasses.field(default_factory=dict)
