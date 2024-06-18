@@ -8,6 +8,7 @@ from google.generativeai.types.generation_types import BaseGenerateContentRespon
 from google.generativeai.protos import GenerateContentResponse, CountTokensResponse
 import pytest
 
+import gitme.config
 import gitme.llm.base
 import gitme.llm.providers.google
 import gitme.llm.setup
@@ -106,21 +107,21 @@ def test_google_model(name: str, monkeypatch) -> None:
         random.choice(string.ascii_letters + string.digits)
         for _ in range(37)
     )
-    provider_config = {
-        "name": name,
-        "connection": {
+    provider_config = gitme.config.LLMProviderConfig(
+        name=name,
+        connection={
             "api_key": fake_api_key
         },
-        "retry": {
+        retry={
             "delay": 1,
             "attempts": 3
         }
-    }
+    )
     monkeypatch.setattr(
         "google.generativeai.configure",
         lambda api_key: logging.info(f"Configured with mock api key: {api_key}")
     )
-    provider: gitme.llm.providers.google.GoogleAI = gitme.llm.setup.get_provider(provider_config)
-    provider._model = MockGenerativeModel(model_name=provider.model)
+    provider: gitme.llm.base.LLMProvider = gitme.llm.setup.get_provider(provider_config)
+    provider._model = MockGenerativeModel(model_name=provider.model)  # type: ignore
     with pytest.raises(ValueError):
         provider.query("Some query")

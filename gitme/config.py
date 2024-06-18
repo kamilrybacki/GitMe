@@ -5,11 +5,6 @@ import typing
 import pydantic
 import tenacity
 
-import gitme.gh
-import gitme.config
-import gitme.llm.base
-import gitme.llm.prompts
-
 #     Here are the dictionaries that need to be defined by the used as
 #     configuration for the RunnerConfig class:
 
@@ -89,15 +84,15 @@ class RunnerConfig:
     """
     config: RunnerConfigDictionary
     output: str = dataclasses.field(init=False)
-    _llm: gitme.config.LLMProviderConfig = dataclasses.field(init=False)
-    _github: gitme.config.GithubProfileConfig = dataclasses.field(init=False)
+    _llm: LLMProviderConfig = dataclasses.field(init=False)
+    _github: GithubProfileConfig = dataclasses.field(init=False)
     _only_repos: str = dataclasses.field(init=False)
     _add_repos: str = dataclasses.field(init=False)
 
     def __post_init__(self):
         self.output = self.config["output"]
         github_section = self.config["github"]
-        self._github = gitme.config.GithubProfileConfig(
+        self._github = GithubProfileConfig(
             username=github_section["username"],
             token=github_section["token"],
         )
@@ -108,11 +103,11 @@ class RunnerConfig:
             github_section.get("add", "")
         )
 
-        self._llm = gitme.config.LLMProviderConfig(**self.config["llm"])
+        self._llm = LLMProviderConfig(**self.config["llm"])
         self.config = {}
 
     def split_and_check_repos(self, repos_list: str) -> list[str]:
-        cleaned_repos = []
+        cleaned_repos: list[str] = []
         if not repos_list:
             return cleaned_repos
         split_repos_list = repos_list.split(",") if "," in repos_list else [repos_list]
