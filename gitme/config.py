@@ -10,26 +10,25 @@ import gitme.config
 import gitme.llm.base
 import gitme.llm.prompts
 
-"""
-Here are the dictionaries that need to be defined by the used as
-configuration for the RunnerConfig class:
+#     Here are the dictionaries that need to be defined by the used as
+#     configuration for the RunnerConfig class:
 
-Example:
-{
-    "llm": {
-        "name": "...",
-        "connection": ...,
-        "retry": ...
-    },
-    "github": {
-        "username": ...,
-        "token": ...,
-        "only": ...,  <- optional
-        "add": ...  <- optional
-    },
-    "output": ...
-}
-"""
+#     Example:
+#     {
+#         "llm": {
+#             "name": "...",
+#             "connection": ...,
+#             "retry": ...
+#         },
+#         "github": {
+#             "username": ...,
+#             "token": ...,
+#             "only": ...,  <- optional
+#             "add": ...  <- optional
+#         },
+#         "output": ...
+#     }
+
 
 class LLMConfigDictionary(typing.TypedDict):
     """
