@@ -2,7 +2,7 @@
 
 <img
     src='.github/assets/gitme.svg'
-    alt='GitMe logo'
+    alt='GitMe SVG logo'
     width='200'
     style='display: block; margin: 0 auto;'
 />
