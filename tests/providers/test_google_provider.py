@@ -8,9 +8,9 @@ from google.generativeai.types.generation_types import BaseGenerateContentRespon
 from google.generativeai.protos import GenerateContentResponse, CountTokensResponse
 import pytest
 
-import llm.base
-import llm.providers.google
-import llm.setup
+import gitme.llm.base
+import gitme.llm.providers.google
+import gitme.llm.setup
 
 
 class MockGenerativeModel(google.generativeai.GenerativeModel):
@@ -32,12 +32,12 @@ class MockGenerativeModel(google.generativeai.GenerativeModel):
 
 
 # pylint: disable=all
-class MockGoogleAI(llm.providers.google.GoogleAI):
+class MockGoogleAI(gitme.llm.providers.google.GoogleAI):
     model: str = "mockini-1.0-pro"
     _tokens_to_send: int = 0
 
     @classmethod
-    def connect(cls, config: dict[str, str]) -> llm.base.LLMProvider:
+    def connect(cls, config: dict[str, str]) -> gitme.llm.base.LLMProvider:
         return cls(
             _model=MockGenerativeModel(model_name=cls.model),
             _limits={
@@ -50,17 +50,17 @@ class MockGoogleAI(llm.providers.google.GoogleAI):
             }
         )
 
-    def query(self, query: str) -> llm.base.LLMQueryResult:
+    def query(self, query: str) -> gitme.llm.base.LLMQueryResult:
         if self._are_limits_exceeded(
             self._tokens_to_send
         ):
             raise ValueError("Usage limits exceeded")
-        usage_data = llm.base.TokenCounters(
+        usage_data = gitme.llm.base.TokenCounters(
             prompt=self._tokens_to_send,
             total=self._tokens_to_send
         )
         self._update_usage_counters(usage_data)
-        return llm.base.LLMQueryResult(
+        return gitme.llm.base.LLMQueryResult(
             query=query,
             result="Mocked result",
             tokens=usage_data
@@ -97,7 +97,7 @@ def test_token_limiter(
     "name",
     [
         model
-        for model in llm.setup.AVAILABLE_PROVIDERS.keys()
+        for model in gitme.llm.setup.AVAILABLE_PROVIDERS.keys()
         if model.startswith("G")
     ]
 )
@@ -120,7 +120,7 @@ def test_google_model(name: str, monkeypatch) -> None:
         "google.generativeai.configure",
         lambda api_key: logging.info(f"Configured with mock api key: {api_key}")
     )
-    provider: llm.providers.google.GoogleAI = llm.setup.get_provider(provider_config)
+    provider: gitme.llm.providers.google.GoogleAI = gitme.llm.setup.get_provider(provider_config)
     provider._model = MockGenerativeModel(model_name=provider.model)
     with pytest.raises(ValueError):
         provider.query("Some query")

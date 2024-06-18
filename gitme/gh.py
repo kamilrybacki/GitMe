@@ -12,7 +12,7 @@ import github.Auth
 import github.ContentFile
 import github.Repository
 
-import metadata
+from gitme.metadata import RepositoryMetadata
 
 
 class RequestsSessionHook(typing.Protocol):
@@ -161,19 +161,21 @@ class GithubProfile:
         )
 
     def get_repo(self, repo_name: str) -> github.Repository.Repository:
-        return self.__client.get_repo(f"{self.username}/{repo_name}")
+        repo_path = f"{self.username}/{repo_name}"
+        self.log(f"Fetching repository {repo_path}")
+        return self.__client.get_repo(repo_path)
 
     @property
     def _repositories(self) -> list[github.Repository.Repository]:
         return list(self.__client.get_user().get_repos())
 
     @property
-    def repositories(self) -> typing.Generator[metadata.RepositoryMetadata, None, None]:
+    def repositories(self) -> typing.Generator[RepositoryMetadata, None, None]:
         self.log(f"Fetching repositories for {self.username}")
         for repo in self._repositories:
             if repo.private:
                 continue
-            yield metadata.RepositoryMetadata.from_repo(repo)
+            yield RepositoryMetadata.from_repo(repo)
 
     @property
     def _pinned_repositories(self) -> list[github.Repository.Repository]:
@@ -201,12 +203,12 @@ class GithubProfile:
         ]
 
     @property
-    def pinned_repositories(self) -> typing.Generator[metadata.RepositoryMetadata, None, None]:
+    def pinned_repositories(self) -> typing.Generator[RepositoryMetadata, None, None]:
         self.log(f"Fetching pinned repositories for {self.username}")
         for repo in self._pinned_repositories:
             if repo.private:
                 continue
-            yield metadata.RepositoryMetadata.from_repo(repo)
+            yield RepositoryMetadata.from_repo(repo)
 
     def get_repo_readme(self, repo: github.Repository.Repository) -> str:
         try:

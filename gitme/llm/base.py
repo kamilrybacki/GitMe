@@ -6,7 +6,7 @@ import typing
 
 import tenacity
 
-import llm.config
+import gitme.llm.config
 
 
 class TokenCounters(typing.TypedDict):
@@ -30,9 +30,9 @@ class LLMProvider(abc.ABC):
 
     # pylint: disable=protected-access
     @classmethod
-    def initialize(cls, configuration: llm.config.LLMConfigDictionary) -> LLMProvider:
+    def initialize(cls, configuration: gitme.llm.config.LLMConfigDictionary) -> LLMProvider:
         if not cls.__instance:
-            parsed_config = llm.config.LLMProviderConfig(
+            parsed_config = gitme.llm.config.LLMProviderConfig(
                 connection=configuration["connection"],
                 retry=configuration["retry"],
             )

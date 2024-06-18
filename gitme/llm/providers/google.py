@@ -3,11 +3,10 @@ import abc
 import dataclasses
 import logging
 import time
-import typing
 
 import google.generativeai.client
 
-from llm.base import LLMProvider, LLMQueryResult, TokenCounters
+from gitme.llm.base import LLMProvider, LLMQueryResult, TokenCounters
 
 
 # Limits below are taken from: https://aistudio.google.com/app/plan_information
@@ -88,7 +87,7 @@ class GoogleAI(LLMProvider, abc.ABC):
         self._usage_counters['RPM'] += 2
 
     def count_tokens(self, query: str) -> int:
-        return self._model.countaddens(query).total_tokens
+        return self._model.count_tokens(query).total_tokens
 
 
 @dataclasses.dataclass
