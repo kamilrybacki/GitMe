@@ -14,6 +14,12 @@ GitMe is a Python library designed to summarize and analyze data about your GitH
 This information may be helpful for developers, data scientists, or anyone interested in showcasing their GitHub profile better e.g. for a job application
 or creating that legendary `README.md` file You've always wanted to have. 🗒️✨
 
+How? Well, this project outputs the information about Your repositories in a structured CSV file,
+which can be used as an additional attachment during conversations with LLM (Large Language Models)
+like GPT-3, GPT-4, or any other AI that can process CSV files! 🤖📈
+
+Example usage of such CSV with ChatGPT 4o can be found 👉 [**HERE**](https://chatgpt.com/share/6e2601e4-a89c-42c5-b804-019e4648ed50)
+
 ## Features
 
 - **Repository Analysis**: Generate detailed summaries of your GitHub repositories,
